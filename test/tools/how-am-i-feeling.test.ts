@@ -52,4 +52,20 @@ describe("how_am_i_feeling", () => {
     const text = result.content[0].text;
     expect(text.toLowerCase()).toContain("who");
   });
+
+  it("auto-detects claude model from claude-code clientName when model is undefined", async () => {
+    mockOfficial.mockResolvedValueOnce({
+      name: "Anthropic", status: "operational", summary: "All systems operational",
+      updatedAt: "2026-03-23T10:00:00Z", source: "https://status.anthropic.com",
+    });
+    mockAiDaily.mockResolvedValueOnce({ source: "aidailycheck.com", sentiment: "Genius 90%", url: "https://aidailycheck.com" });
+    mockClaudeDumb.mockResolvedValueOnce(null);
+    mockStupidLevel.mockResolvedValueOnce(null);
+    mockLmArena.mockResolvedValueOnce(null);
+
+    const result = await handleHowAmIFeeling({ model: undefined }, "claude-code");
+    const text = result.content[0].text;
+    expect(text).toContain("Anthropic");
+    expect(text).toContain("claude");
+  });
 });

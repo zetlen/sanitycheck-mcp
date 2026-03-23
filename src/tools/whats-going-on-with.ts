@@ -125,7 +125,13 @@ function formatDetail(d: ServiceDetail): string {
 
   if (d.thirdPartyReports.downdetector) {
     const dd = d.thirdPartyReports.downdetector;
-    lines.push(`\nDowndetector: ${dd.reportCount} reports (${dd.trend})`);
+    const trendText = dd.trend === "stable" ? "trend unavailable" : dd.trend;
+    lines.push(`\nDowndetector: ${dd.reportCount} reports (${trendText})`);
+  }
+
+  if (d.thirdPartyReports.statusgator) {
+    const sg = d.thirdPartyReports.statusgator;
+    lines.push(`\nStatusGator: ${STATUS_EMOJI[sg.status]} ${sg.summary}`);
   }
 
   return lines.join("\n");

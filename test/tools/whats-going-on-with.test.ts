@@ -9,6 +9,10 @@ vi.mock("../../src/fetchers/aggregators/downdetector.js", () => ({
   fetchDowndetectorReports: vi.fn(),
 }));
 
+vi.mock("../../src/fetchers/aggregators/statusgator.js", () => ({
+  fetchStatusGatorStatus: vi.fn(),
+}));
+
 vi.mock("../../src/cache.js", () => ({
   FileCache: vi.fn().mockImplementation(() => ({
     get: vi.fn().mockReturnValue(null),
@@ -19,14 +23,17 @@ vi.mock("../../src/cache.js", () => ({
 import { handleWhatsGoingOnWith } from "../../src/tools/whats-going-on-with.js";
 import { fetchOfficialDetail } from "../../src/fetchers/official/index.js";
 import { fetchDowndetectorReports } from "../../src/fetchers/aggregators/downdetector.js";
+import { fetchStatusGatorStatus } from "../../src/fetchers/aggregators/statusgator.js";
 
 const mockDetail = vi.mocked(fetchOfficialDetail);
 const mockDD = vi.mocked(fetchDowndetectorReports);
+const mockSG = vi.mocked(fetchStatusGatorStatus);
 
 describe("whats_going_on_with", () => {
   beforeEach(() => {
     mockDetail.mockReset();
     mockDD.mockReset();
+    mockSG.mockReset();
   });
 
   it("returns detailed status for a known service", async () => {
@@ -41,10 +48,12 @@ describe("whats_going_on_with", () => {
       thirdPartyReports: {},
     });
     mockDD.mockResolvedValueOnce({ source: "downdetector", reportCount: 150, trend: "rising", url: "https://downdetector.com/status/github/" });
+    mockSG.mockResolvedValueOnce({ status: "degraded", summary: "Degraded performance reported" });
 
     const result = await handleWhatsGoingOnWith({ service: "github" });
     expect(result.content[0].text).toContain("GitHub");
     expect(result.content[0].text).toContain("API Latency");
+    expect(result.content[0].text).toContain("StatusGator");
   });
 
   it("falls back to Downdetector for unknown services", async () => {
