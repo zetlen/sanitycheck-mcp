@@ -67,4 +67,37 @@ describe("statuspage fetcher", () => {
     const result = await fetchStatuspageSummary("https://www.githubstatus.com", "GitHub");
     expect(result.status.status).toBe("unknown");
   });
+
+  it("falls back to canonical statuspage.io URL on 403 when statuspageId is provided", async () => {
+    // First call (vanity URL) returns 403
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 403 });
+    // Second call (canonical fallback URL) returns data
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => MOCK_SUMMARY,
+    });
+
+    const result = await fetchStatuspageSummary("https://status.fastly.com", "Fastly", "889929qfzmz6");
+    expect(result.status.name).toBe("Fastly");
+    expect(result.status.status).toBe("operational");
+    // Verify the fallback URL was called
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch.mock.calls[1][0]).toContain("889929qfzmz6.statuspage.io");
+  });
+
+  it("returns unknown when both vanity URL and fallback URL fail", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
+
+    const result = await fetchStatuspageSummary("https://status.fastly.com", "Fastly", "889929qfzmz6");
+    expect(result.status.status).toBe("unknown");
+  });
+
+  it("does not attempt fallback when no statuspageId is provided on 403", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 403 });
+
+    const result = await fetchStatuspageSummary("https://status.example.com", "Example");
+    expect(result.status.status).toBe("unknown");
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
 });

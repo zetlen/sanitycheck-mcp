@@ -69,18 +69,47 @@ export function parseStatuspageDetail(
 export async function fetchStatuspageSummary(
   baseUrl: string,
   serviceName: string,
+  statuspageId?: string,
 ): Promise<{ status: ServiceStatus; detail: ServiceDetail }> {
   const url = `${baseUrl}/api/v2/summary.json`;
   const start = Date.now();
 
+  const commonHeaders = {
+    Accept: "application/json",
+    "User-Agent": "vibecheck-mcp/0.1",
+  };
+
   try {
     const response = await fetch(url, {
-      headers: { Accept: "application/json" },
+      headers: commonHeaders,
       signal: AbortSignal.timeout(10_000),
     });
 
     if (!response.ok) {
       log.warn("http-error", { serviceName, url, status: response.status });
+
+      // If the vanity URL returned 403/404 and we have a statuspageId, try the canonical URL
+      if ((response.status === 403 || response.status === 404) && statuspageId) {
+        const fallbackUrl = `https://${statuspageId}.statuspage.io/api/v2/summary.json`;
+        log.debug("trying-fallback", { serviceName, fallbackUrl });
+        try {
+          const fallbackResponse = await fetch(fallbackUrl, {
+            headers: commonHeaders,
+            signal: AbortSignal.timeout(10_000),
+          });
+          if (fallbackResponse.ok) {
+            const data = await fallbackResponse.json();
+            log.debug("fetched-fallback", { serviceName, fallbackUrl, elapsed: Date.now() - start });
+            const status = parseStatuspageStatus(data, serviceName, baseUrl);
+            const detail = parseStatuspageDetail(data, serviceName, baseUrl);
+            return { status, detail };
+          }
+          log.warn("fallback-http-error", { serviceName, fallbackUrl, status: fallbackResponse.status });
+        } catch (fallbackErr) {
+          log.error("fallback-fetch-error", { serviceName, fallbackUrl, error: String(fallbackErr) });
+        }
+      }
+
       const unknown = makeUnknown(serviceName, baseUrl, `HTTP ${response.status}`);
       return { status: unknown, detail: { ...unknown, components: [], incidents: [], thirdPartyReports: {} } };
     }

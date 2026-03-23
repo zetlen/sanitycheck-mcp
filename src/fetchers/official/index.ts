@@ -7,6 +7,8 @@ import { fetchAwsStatus } from "./aws.js";
 import { fetchGcpStatus } from "./gcp.js";
 import { fetchAzureStatus } from "./azure.js";
 import { fetchAkamaiStatus } from "./akamai.js";
+import { fetchSlackStatus } from "./slack.js";
+import { fetchPagerDutyStatus } from "./pagerduty.js";
 
 const log = createLogger("fetcher:official");
 
@@ -15,6 +17,8 @@ const CUSTOM_FETCHERS: Record<string, () => Promise<ServiceStatus>> = {
   gcp: fetchGcpStatus,
   azure: fetchAzureStatus,
   akamai: fetchAkamaiStatus,
+  slack: fetchSlackStatus,
+  pagerduty: fetchPagerDutyStatus,
   "google-ai": fetchGcpStatus, // Google AI uses the same GCP status endpoint
 };
 
@@ -45,7 +49,7 @@ export async function fetchOfficialStatus(slug: string): Promise<ServiceStatus> 
 
   // Services with Statuspage use the generic fetcher
   if (entry.statuspageId) {
-    const result = await fetchStatuspageSummary(entry.statusUrl, entry.name);
+    const result = await fetchStatuspageSummary(entry.statusUrl, entry.name, entry.statuspageId);
     return result.status;
   }
 
@@ -65,7 +69,7 @@ export async function fetchOfficialDetail(slug: string): Promise<ServiceDetail> 
   }
 
   if (entry.statuspageId) {
-    const result = await fetchStatuspageSummary(entry.statusUrl, entry.name);
+    const result = await fetchStatuspageSummary(entry.statusUrl, entry.name, entry.statuspageId);
     return result.detail;
   }
 

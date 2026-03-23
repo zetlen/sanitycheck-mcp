@@ -35,12 +35,12 @@ export const SERVICES: ServiceEntry[] = [
   { name: "Google AI", slug: "google-ai", category: "ai", statusUrl: "https://status.cloud.google.com/", downdetectorSlug: "google-cloud" },
 
   // Comms
-  { name: "Slack", slug: "slack", category: "comms", statusUrl: "https://status.slack.com", statuspageId: "2qlkr10b2y0j", downdetectorSlug: "slack" },
+  { name: "Slack", slug: "slack", category: "comms", statusUrl: "https://slack-status.com", downdetectorSlug: "slack" },
   { name: "Discord", slug: "discord", category: "comms", statusUrl: "https://discordstatus.com", statuspageId: "srhpyqt94yxb", downdetectorSlug: "discord" },
 
   // Infra
   { name: "Datadog", slug: "datadog", category: "infra", statusUrl: "https://status.datadoghq.com", statuspageId: "1k6wydy513d6", downdetectorSlug: "datadog" },
-  { name: "PagerDuty", slug: "pagerduty", category: "infra", statusUrl: "https://status.pagerduty.com", statuspageId: "bdbmr5p85kgr", downdetectorSlug: "pagerduty" },
+  { name: "PagerDuty", slug: "pagerduty", category: "infra", statusUrl: "https://status.pagerduty.com", downdetectorSlug: "pagerduty" },
   { name: "npm", slug: "npm", category: "infra", statusUrl: "https://status.npmjs.org", statuspageId: "wby3g916dnvk", downdetectorSlug: "npm" },
 ];
 
