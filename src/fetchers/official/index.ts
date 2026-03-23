@@ -3,8 +3,20 @@ import { SERVICES } from "../../registry.js";
 import { fetchStatuspageSummary } from "../statuspage.js";
 import type { ServiceStatus, ServiceDetail } from "../../types.js";
 import { createLogger } from "../../logger.js";
+import { fetchAwsStatus } from "./aws.js";
+import { fetchGcpStatus } from "./gcp.js";
+import { fetchAzureStatus } from "./azure.js";
+import { fetchAkamaiStatus } from "./akamai.js";
 
 const log = createLogger("fetcher:official");
+
+const CUSTOM_FETCHERS: Record<string, () => Promise<ServiceStatus>> = {
+  aws: fetchAwsStatus,
+  gcp: fetchGcpStatus,
+  azure: fetchAzureStatus,
+  akamai: fetchAkamaiStatus,
+  "google-ai": fetchGcpStatus, // Google AI uses the same GCP status endpoint
+};
 
 function makeUnknownStatus(name: string, reason: string): ServiceStatus {
   return {
@@ -37,8 +49,11 @@ export async function fetchOfficialStatus(slug: string): Promise<ServiceStatus> 
     return result.status;
   }
 
-  // Non-Statuspage services (AWS, GCP, Azure, Akamai, Google AI)
-  // return unknown for now — custom fetchers to be implemented in Task 9
+  // Non-Statuspage services — dispatch to custom fetchers
+  if (CUSTOM_FETCHERS[slug]) {
+    return CUSTOM_FETCHERS[slug]();
+  }
+
   log.debug("no-statuspage", { slug, name: entry.name });
   return makeUnknownStatus(entry.name, "Custom status page — fetcher not yet implemented");
 }
@@ -52,6 +67,12 @@ export async function fetchOfficialDetail(slug: string): Promise<ServiceDetail> 
   if (entry.statuspageId) {
     const result = await fetchStatuspageSummary(entry.statusUrl, entry.name);
     return result.detail;
+  }
+
+  // Non-Statuspage services — dispatch to custom fetchers for basic status
+  if (CUSTOM_FETCHERS[slug]) {
+    const status = await CUSTOM_FETCHERS[slug]();
+    return { ...status, components: [], incidents: [], thirdPartyReports: {} };
   }
 
   log.debug("no-statuspage", { slug, name: entry.name });
