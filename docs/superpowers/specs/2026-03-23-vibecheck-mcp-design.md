@@ -250,6 +250,28 @@ Expired entries are dropped on read.
 
 **No retries.** If a fetch fails, report unknown and move on. The TTL cache means the next call in a few minutes tries again naturally.
 
+## Debug Logging
+
+Enabled via `VIBECHECK_DEBUG=1` environment variable. When on, logs structured output to stderr (stdio transport uses stdout for MCP protocol, so stderr is the only safe channel).
+
+**What gets logged:**
+
+- **MCP lifecycle:** `initialize` request with full `clientInfo` payload (name, version — this is how we see what Codex, OpenClaw, Cursor, etc. report as their identity), tool calls with params
+- **Client inference:** the `clientInfo.name` received, the inferred model (or "no match"), and the lookup table used — essential for building out the client-to-model mapping as new clients appear
+- **Fetcher activity:** URL being fetched, HTTP status, response size, parse result (status level + summary), and elapsed time
+- **Browser activity:** Chrome path discovered, launch success/failure, page navigation URLs, page load times
+- **Cache activity:** cache hit/miss per key, TTL remaining on hits, file write/read paths
+- **Errors:** full error context (URL, status code, response body snippet, stack trace) — not just "unknown"
+
+**Format:** Structured JSON lines to stderr, e.g.:
+```
+{"level":"debug","component":"fetcher:aws","event":"fetch","url":"https://...","status":200,"elapsed":342}
+{"level":"debug","component":"client","event":"initialize","clientInfo":{"name":"codex","version":"0.1.0"},"inferred":"openai"}
+{"level":"warn","component":"fetcher:downdetector","event":"blocked","url":"https://...","status":403,"body":"<captcha>..."}
+```
+
+**Off by default.** When `VIBECHECK_DEBUG` is unset, zero log output. The MCP server is silent except for protocol messages on stdout.
+
 ## Transport
 
 stdio only. Runs as a local subprocess launched by the AI assistant (Claude Code, Cursor, etc.). HTTP transport can be added later without changing core logic.
