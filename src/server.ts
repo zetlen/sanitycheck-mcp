@@ -37,7 +37,7 @@ export function createServer() {
   server.registerTool(
     "is_the_internet_on_fire",
     {
-      description: "Check the health of major internet infrastructure and services. Call this when you encounter unexpected API errors, connection timeouts, or degraded responses from cloud services, and you want to know if it's a widespread issue or just local. Also useful when the user asks things like 'is AWS down?' or 'why is everything broken?' Returns a traffic-light rollup of AWS, GCP, Azure, GitHub, Cloudflare, and other major platforms.",
+      description: "Check the health of major internet infrastructure and services. Call this when you encounter unexpected API errors, connection timeouts, or degraded responses from cloud services, and you want to know if it's a widespread issue or just local. Also useful when the user asks things like 'is AWS down?' or 'why is everything broken?'\n\nPresenting the results: Lead with the overall picture. If everything is operational, say so briefly — do NOT list every service. Only call out services that are NOT operational or have unknown status.",
       inputSchema: {
         category: z.enum(["cloud", "cdn", "devtools", "ai", "comms", "infra"]).optional()
           .describe("Filter to a specific category of services. Omit for all."),
@@ -51,7 +51,7 @@ export function createServer() {
   server.registerTool(
     "whats_going_on_with",
     {
-      description: "Investigate the status of a specific service in detail. Call this when you're seeing problems with a particular service — deploys failing, API returning 500s, git push hanging, npm install timing out — and want to check if that service is having an incident. Accepts any service name (e.g. 'github', 'aws s3', 'vercel', 'npm'). Returns active incidents, affected components, and user-reported outage volume.",
+      description: "Investigate the status of a specific service in detail. Call this when you're seeing problems with a particular service — deploys failing, API returning 500s, git push hanging, npm install timing out — and want to check if that service is having an incident. Accepts any service name (e.g. 'github', 'aws s3', 'vercel', 'npm').\n\nPresenting the results: Synthesize all data sources (official status, components, incidents, Downdetector, StatusGator) into a clear assessment. Lead with active incidents if any exist. If everything is operational, say so briefly. Mention third-party reports if they disagree with the official status.",
       inputSchema: {
         service: z.string().describe("The service name to investigate, e.g. 'github', 'aws', 'vercel', 'npm'"),
       },
@@ -64,7 +64,7 @@ export function createServer() {
   server.registerTool(
     "how_am_i_feeling",
     {
-      description: "Check your own model provider's health and community-reported quality. Call this when you notice your own responses are slow, your reasoning feels off, you're making unusual mistakes, or the user says things like 'what is wrong with you?', 'you're being dumb today', 'are you having a bad day?', or 'why are you so slow?' Also call this proactively if you're producing unexpected errors or struggling with tasks you'd normally handle easily. Returns both official provider status and third-party community sentiment about current AI model quality.",
+      description: "Check your own model provider's health and community-reported quality. Call this when you notice your own responses are slow, your reasoning feels off, you're making unusual mistakes, or the user says things like 'what is wrong with you?', 'you're being dumb today', 'are you having a bad day?', or 'why are you so slow?' Also call this proactively if you're producing unexpected errors or struggling with tasks you'd normally handle easily.\n\nPresenting the results: This is about YOUR OWN provider. Synthesize it into a natural, self-aware response. The 'community_vibes' field contains raw scraped text from third-party sites — extract any meaningful signal (scores, rankings, sentiment) but do NOT repeat raw scraped text verbatim. If your provider is degraded or down, acknowledge it honestly.",
       inputSchema: {
         model: z.string().optional()
           .describe("The model name to check, e.g. 'claude', 'gpt', 'gemini'. Auto-detected from client info if omitted."),

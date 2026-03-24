@@ -38,21 +38,7 @@ export async function handleWhatsGoingOnWith(
     }
   }
 
-  const preamble = [
-    `<instructions>`,
-    `This is detailed status data for a specific service the user asked about.`,
-    `Synthesize the official status, component health, active incidents, and third-party reports into a clear assessment.`,
-    `If there are active incidents, lead with those — they're what the user most likely cares about.`,
-    `If everything is operational across all sources, say so briefly without listing every component.`,
-    `Third-party reports (Downdetector, StatusGator) provide independent corroboration — mention them if they disagree with the official status.`,
-    `</instructions>`,
-    ``,
-    `<data>`,
-  ].join("\n");
-
-  const epilogue = `</data>`;
-
-  return { content: [{ type: "text", text: `${preamble}\n${lines.join("\n\n")}\n${epilogue}` }] };
+  return { content: [{ type: "text", text: lines.join("\n\n") }] };
 }
 
 async function fetchServiceDetail(entry: ServiceEntry, cache?: FileCache): Promise<ServiceDetail> {
@@ -107,22 +93,16 @@ async function fallbackToDowndetector(
   const dd = await fetchDowndetectorReports(slug);
   if (dd) {
     const text = [
-      `<instructions>`,
-      `"${service}" is not a service we track directly, but Downdetector has data. Summarize this for the user and note the limited data source.`,
-      `</instructions>`,
-      ``,
-      `<data>`,
       `service: ${service} (not in tracked list, Downdetector only)`,
       `downdetector_reports: ${dd.reportCount}`,
       `trend: ${dd.trend}`,
       `source: ${dd.url}`,
-      `</data>`,
     ].join("\n");
     if (cache) cache.set(cacheKey, text, DD_TTL);
     return { content: [{ type: "text", text }] };
   }
 
-  return { content: [{ type: "text", text: `"${service}" is not in the tracked service list and no Downdetector page was found for it. Let the user know you can't check this service's status.` }] };
+  return { content: [{ type: "text", text: `"${service}" is not in the tracked service list and no Downdetector data was found.` }] };
 }
 
 function formatDetail(d: ServiceDetail): string {

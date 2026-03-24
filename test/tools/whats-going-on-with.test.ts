@@ -53,7 +53,7 @@ describe("whats_going_on_with", () => {
     const result = await handleWhatsGoingOnWith({ service: "github" });
     expect(result.content[0].text).toContain("GitHub");
     expect(result.content[0].text).toContain("API Latency");
-    expect(result.content[0].text).toContain("StatusGator");
+    expect(result.content[0].text).toContain("statusgator");
   });
 
   it("falls back to Downdetector for unknown services", async () => {

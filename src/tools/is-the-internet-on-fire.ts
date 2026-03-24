@@ -49,22 +49,7 @@ export async function handleIsTheInternetOnFire(
     return `unknown: fetch failed`;
   });
 
-  const nonOperational = results.filter(
-    (r) => r.status === "fulfilled" && r.value.status !== "operational"
-  ).length;
-
-  const text = [
-    `<instructions>`,
-    `This is a snapshot of major internet infrastructure health. Summarize it for the user.`,
-    `Lead with the overall picture: ${nonOperational === 0 ? "everything is operational — keep it brief" : `${nonOperational} service(s) have issues — call those out clearly and mention what's affected`}.`,
-    `Do NOT list every service if they're all healthy — just say "all N services are operational" or similar.`,
-    `Only list services that are NOT operational, plus any with "unknown" status worth noting.`,
-    `</instructions>`,
-    ``,
-    `<data>`,
-    ...statusLines,
-    `</data>`,
-  ].join("\n");
+  const text = statusLines.join("\n");
 
   return {
     content: [{ type: "text", text }],

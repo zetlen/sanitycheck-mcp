@@ -66,14 +66,6 @@ export async function handleHowAmIFeeling(
 function formatVibeCheck(model: string, official: ServiceStatus, vibes: VibeResult[]): string {
   const lines: string[] = [];
 
-  lines.push(`<instructions>`);
-  lines.push(`This is data about YOUR OWN provider's health and how the community perceives you right now.`);
-  lines.push(`Synthesize this into a natural, first-person-aware response. For example: "My provider (${official.name}) is ${official.status}" or "Looks like I might be having issues."`);
-  lines.push(`The "community vibes" section contains raw scraped text from third-party sites — it may be noisy or garbled. Extract any meaningful signal (scores, rankings, sentiment) and discard the rest. Do NOT repeat raw scraped text verbatim to the user.`);
-  lines.push(`If your provider is degraded or down, acknowledge it honestly and mention it may affect your responses.`);
-  lines.push(`</instructions>`);
-  lines.push(``);
-  lines.push(`<data>`);
   lines.push(`model: ${model}`);
   lines.push(`provider: ${official.name}`);
   lines.push(`status: ${official.status}`);
@@ -92,8 +84,6 @@ function formatVibeCheck(model: string, official: ServiceStatus, vibes: VibeResu
     lines.push(``);
     lines.push(`community_vibes: unavailable (headless browser not running)`);
   }
-
-  lines.push(`</data>`);
 
   return lines.join("\n");
 }
