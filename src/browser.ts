@@ -6,7 +6,7 @@ let browserInstance: import("puppeteer-core").Browser | null = null;
 let launchPromise: Promise<import("puppeteer-core").Browser | null> | null = null;
 
 async function findChromePath(): Promise<string | null> {
-  const envPath = process.env.VIBECHECK_CHROME_PATH;
+  const envPath = process.env.SANITYCHECK_CHROME_PATH;
   if (envPath) {
     log.debug("chrome-path-env", { path: envPath });
     return envPath;

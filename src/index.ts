@@ -8,7 +8,7 @@ const server = createServer();
 const transport = new StdioServerTransport();
 
 await server.connect(transport);
-console.error("vibecheck-mcp running on stdio");
+console.error("sanitycheck-mcp running on stdio");
 
 // Clean up browser on exit
 process.on("SIGINT", async () => {

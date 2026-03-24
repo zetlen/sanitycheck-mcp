@@ -11,7 +11,7 @@ const log = createLogger("server");
 
 export function createServer() {
   const server = new McpServer({
-    name: "vibecheck-mcp",
+    name: "sanitycheck-mcp",
     version: "0.1.0",
   });
 

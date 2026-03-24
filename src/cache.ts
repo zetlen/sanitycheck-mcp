@@ -66,5 +66,5 @@ export class FileCache {
 export function createDefaultCache(): FileCache {
   const xdg = process.env.XDG_CACHE_HOME;
   const base = xdg || join(process.env.HOME || "/tmp", ".cache");
-  return new FileCache(join(base, "vibecheck-mcp"));
+  return new FileCache(join(base, "sanitycheck-mcp"));
 }

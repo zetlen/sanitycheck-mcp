@@ -9,7 +9,7 @@ interface Logger {
 }
 
 function isEnabled(): boolean {
-  return process.env.VIBECHECK_DEBUG === "1";
+  return process.env.SANITYCHECK_DEBUG === "1";
 }
 
 function emit(level: string, component: string, event: string, data?: LogData): void {

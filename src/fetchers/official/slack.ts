@@ -12,7 +12,7 @@ export async function fetchSlackStatus(): Promise<ServiceStatus> {
     const response = await fetch(API_URL, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "vibecheck-mcp/0.1",
+        "User-Agent": "sanitycheck-mcp/0.1",
       },
       signal: AbortSignal.timeout(10_000),
     });

@@ -5,19 +5,19 @@ describe("logger", () => {
   let originalEnv: string | undefined;
 
   beforeEach(() => {
-    originalEnv = process.env.VIBECHECK_DEBUG;
+    originalEnv = process.env.SANITYCHECK_DEBUG;
   });
 
   afterEach(() => {
     if (originalEnv === undefined) {
-      delete process.env.VIBECHECK_DEBUG;
+      delete process.env.SANITYCHECK_DEBUG;
     } else {
-      process.env.VIBECHECK_DEBUG = originalEnv;
+      process.env.SANITYCHECK_DEBUG = originalEnv;
     }
   });
 
-  it("should not log when VIBECHECK_DEBUG is unset", () => {
-    delete process.env.VIBECHECK_DEBUG;
+  it("should not log when SANITYCHECK_DEBUG is unset", () => {
+    delete process.env.SANITYCHECK_DEBUG;
     const log = createLogger("test");
     const spy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     log.debug("hello", { foo: "bar" });
@@ -25,8 +25,8 @@ describe("logger", () => {
     spy.mockRestore();
   });
 
-  it("should log JSON to stderr when VIBECHECK_DEBUG=1", () => {
-    process.env.VIBECHECK_DEBUG = "1";
+  it("should log JSON to stderr when SANITYCHECK_DEBUG=1", () => {
+    process.env.SANITYCHECK_DEBUG = "1";
     const log = createLogger("test-component");
     const spy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     log.debug("hello", { foo: "bar" });

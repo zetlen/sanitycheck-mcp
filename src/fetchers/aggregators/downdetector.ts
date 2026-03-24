@@ -18,7 +18,7 @@ export async function fetchDowndetectorReports(slug: string): Promise<Downdetect
   try {
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; vibecheck-mcp/0.1)",
+        "User-Agent": "Mozilla/5.0 (compatible; sanitycheck-mcp/0.1)",
         Accept: "text/html",
       },
       signal: AbortSignal.timeout(10_000),

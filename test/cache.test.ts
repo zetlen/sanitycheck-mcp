@@ -9,7 +9,7 @@ describe("FileCache", () => {
   let cache: FileCache;
 
   beforeEach(() => {
-    cacheDir = mkdtempSync(join(tmpdir(), "vibecheck-test-"));
+    cacheDir = mkdtempSync(join(tmpdir(), "sanitycheck-test-"));
     cache = new FileCache(cacheDir);
   });
 

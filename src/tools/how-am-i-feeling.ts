@@ -60,10 +60,10 @@ export async function handleHowAmIFeeling(
     .map((r) => r.value)
     .filter((v): v is VibeResult => v !== null);
 
-  return { content: [{ type: "text", text: formatVibeCheck(model, official, vibes) }] };
+  return { content: [{ type: "text", text: formatSanityCheck(model, official, vibes) }] };
 }
 
-function formatVibeCheck(model: string, official: ServiceStatus, vibes: VibeResult[]): string {
+function formatSanityCheck(model: string, official: ServiceStatus, vibes: VibeResult[]): string {
   const lines: string[] = [];
 
   lines.push(`model: ${model}`);

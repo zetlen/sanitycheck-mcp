@@ -38,7 +38,7 @@ export interface ServiceDetail extends ServiceStatus {
   };
 }
 
-export interface AIVibeCheck {
+export interface AISanityCheck {
   provider: string;
   officialStatus: ServiceStatus;
   vibes: {

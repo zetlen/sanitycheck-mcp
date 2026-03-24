@@ -1,10 +1,10 @@
 {
-  "name": "vibecheck-mcp",
+  "name": "sanitycheck-mcp",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
   "bin": {
-    "vibecheck-mcp": "dist/index.js"
+    "sanitycheck-mcp": "dist/index.js"
   },
   "directories": {
     "doc": "docs"

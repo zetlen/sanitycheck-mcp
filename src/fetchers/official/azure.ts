@@ -10,7 +10,7 @@ export async function fetchAzureStatus(): Promise<ServiceStatus> {
   const start = Date.now();
   try {
     const response = await fetch(STATUS_URL, {
-      headers: { Accept: "text/html", "User-Agent": "vibecheck-mcp/0.1" },
+      headers: { Accept: "text/html", "User-Agent": "sanitycheck-mcp/0.1" },
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) return makeUnknown(`HTTP ${response.status}`);

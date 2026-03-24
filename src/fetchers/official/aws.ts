@@ -12,7 +12,7 @@ export async function fetchAwsStatus(): Promise<ServiceStatus> {
     const response = await fetch(STATUS_URL, {
       headers: {
         Accept: "text/html",
-        "User-Agent": "vibecheck-mcp/0.1",
+        "User-Agent": "sanitycheck-mcp/0.1",
       },
       signal: AbortSignal.timeout(10_000),
     });

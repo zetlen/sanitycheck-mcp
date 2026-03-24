@@ -76,7 +76,7 @@ export async function fetchStatuspageSummary(
 
   const commonHeaders = {
     Accept: "application/json",
-    "User-Agent": "vibecheck-mcp/0.1",
+    "User-Agent": "sanitycheck-mcp/0.1",
   };
 
   try {

@@ -19,7 +19,7 @@ export async function fetchGitLabStatus(): Promise<ServiceStatus> {
     const response = await fetch(STATUS_IO_API, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "vibecheck-mcp/0.1",
+        "User-Agent": "sanitycheck-mcp/0.1",
       },
       signal: AbortSignal.timeout(10_000),
     });
