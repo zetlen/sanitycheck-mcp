@@ -8,6 +8,8 @@ export const CLIENT_MODEL_MAP: Record<string, string> = {
   "claude-desktop": "claude",
   "copilot": "gpt",
   "github-copilot": "gpt",
+  "codex-mcp-client": "gpt",
+  "gemini-cli-mcp-client": "gemini",
 };
 
 export function inferModel(clientName: string | undefined): string | null {
