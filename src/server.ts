@@ -22,16 +22,26 @@ export function createServer() {
   // any tool calls), so reading it at tool-call time is safe.
   function getClientName(): string | null {
     try {
-      // The underlying Server instance stores clientInfo as _clientVersion
-      // after the initialize handshake. Access it lazily at tool-call time.
+      // Use the public getClientVersion() API on the underlying Server instance.
       const serverAny = server as any;
-      const clientInfo = serverAny.server?._clientInfo ?? serverAny.server?._clientVersion;
-      if (clientInfo) {
-        log.debug("client-info", { clientInfo });
-        return clientInfo.name ?? null;
+      const lowLevelServer = serverAny.server;
+      if (!lowLevelServer) {
+        log.warn("client-info-failed", { reason: "no underlying server instance" });
+        return null;
       }
-    } catch {}
-    return null;
+      const clientInfo = typeof lowLevelServer.getClientVersion === "function"
+        ? lowLevelServer.getClientVersion()
+        : lowLevelServer._clientInfo ?? lowLevelServer._clientVersion;
+      if (!clientInfo) {
+        log.warn("client-info-failed", { reason: "clientInfo not set (handshake may not have completed)" });
+        return null;
+      }
+      log.debug("client-info", { clientInfo });
+      return clientInfo.name ?? null;
+    } catch (err) {
+      log.warn("client-info-failed", { reason: String(err) });
+      return null;
+    }
   }
 
   server.registerTool(

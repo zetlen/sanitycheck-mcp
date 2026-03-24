@@ -41,12 +41,18 @@ export async function handleIsTheInternetOnFire(
     })
   );
 
-  const statusLines = results.map((r) => {
+  const statusLines = results.map((r, i) => {
     if (r.status === "fulfilled") {
       const s = r.value;
       return `${s.name}: ${s.status} — ${s.summary}`;
     }
-    return `unknown: fetch failed`;
+    log.warn("fetch-failed", { service: services[i].slug, error: String(r.reason) });
+    return `${services[i].name}: unknown — fetch failed`;
+  });
+
+  log.debug("results", {
+    total: results.length,
+    failed: results.filter((r) => r.status === "rejected").length,
   });
 
   const text = statusLines.join("\n");

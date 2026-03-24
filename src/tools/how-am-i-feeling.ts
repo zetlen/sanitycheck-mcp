@@ -30,6 +30,7 @@ export async function handleHowAmIFeeling(
   const model = params.model?.toLowerCase() || inferModel(clientName ?? undefined);
 
   if (!model) {
+    log.warn("no-model", { clientName, reason: "could not auto-detect model and no model parameter provided" });
     return {
       content: [{
         type: "text",
@@ -55,11 +56,22 @@ export async function handleHowAmIFeeling(
     ? officialResult.value
     : { name: providerSlug, status: "unknown", summary: "Could not fetch official status", updatedAt: new Date().toISOString(), source: "" };
 
-  const vibes: VibeResult[] = vibeResults
-    .filter((r): r is PromiseFulfilledResult<VibeResult | null> => r.status === "fulfilled")
-    .map((r) => r.value)
-    .filter((v): v is VibeResult => v !== null);
+  if (officialResult.status === "rejected") {
+    log.warn("official-fetch-failed", { providerSlug, error: String(officialResult.reason) });
+  }
 
+  const vibes: VibeResult[] = [];
+  const vibeNames = ["aidailycheck", "isclaudecodedumb", "aistupidlevel", "lmarena"];
+  for (let i = 0; i < vibeResults.length; i++) {
+    const r = vibeResults[i];
+    if (r.status === "fulfilled" && r.value) {
+      vibes.push(r.value);
+    } else if (r.status === "rejected") {
+      log.warn("vibe-fetch-failed", { source: vibeNames[i], model, error: String(r.reason) });
+    }
+  }
+
+  log.debug("results", { model, officialStatus: official.status, vibeCount: vibes.length });
   return { content: [{ type: "text", text: formatSanityCheck(model, official, vibes) }] };
 }
 

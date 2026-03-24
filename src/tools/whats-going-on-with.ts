@@ -24,6 +24,7 @@ export async function handleWhatsGoingOnWith(
   log.debug("resolved", { query: params.service, matches: matches.length });
 
   if (matches.length === 0) {
+    log.debug("no-matches", { query: params.service, fallback: "downdetector" });
     return fallbackToDowndetector(params.service, cache);
   }
 
@@ -32,9 +33,12 @@ export async function handleWhatsGoingOnWith(
   );
 
   const lines: string[] = [];
-  for (const r of results) {
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
     if (r.status === "fulfilled") {
       lines.push(formatDetail(r.value));
+    } else {
+      log.warn("detail-fetch-failed", { service: matches[i].slug, error: String(r.reason) });
     }
   }
 
@@ -54,6 +58,9 @@ async function fetchServiceDetail(entry: ServiceEntry, cache?: FileCache): Promi
     fetchStatusGatorStatus(entry.slug),
   ]);
 
+  if (detail.status === "rejected") {
+    log.warn("official-detail-failed", { slug: entry.slug, error: String(detail.reason) });
+  }
   const result = detail.status === "fulfilled" ? detail.value : {
     name: entry.name, status: "unknown" as const, summary: "Failed to fetch",
     updatedAt: new Date().toISOString(), source: entry.statusUrl,
@@ -65,6 +72,8 @@ async function fetchServiceDetail(entry: ServiceEntry, cache?: FileCache): Promi
       reportCount: dd.value.reportCount,
       trend: dd.value.trend,
     };
+  } else if (dd.status === "rejected") {
+    log.warn("downdetector-failed", { slug: entry.slug, error: String(dd.reason) });
   }
 
   if (sg.status === "fulfilled" && sg.value) {
@@ -72,6 +81,8 @@ async function fetchServiceDetail(entry: ServiceEntry, cache?: FileCache): Promi
       status: sg.value.status,
       summary: sg.value.summary,
     };
+  } else if (sg.status === "rejected") {
+    log.warn("statusgator-failed", { slug: entry.slug, error: String(sg.reason) });
   }
 
   if (cache) cache.set(cacheKey, result, OFFICIAL_TTL);
