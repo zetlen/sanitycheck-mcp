@@ -1,14 +1,15 @@
 {
   "name": "sanitycheck-mcp",
   "version": "0.1.0",
-  "description": "",
+  "description": "MCP server that gives AI coding agents awareness of internet and service health",
   "main": "dist/index.js",
   "bin": {
     "sanitycheck-mcp": "dist/index.js"
   },
-  "directories": {
-    "doc": "docs"
-  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
