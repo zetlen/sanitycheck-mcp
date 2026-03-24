@@ -9,6 +9,8 @@ import { fetchAzureStatus } from "./azure.js";
 import { fetchAkamaiStatus } from "./akamai.js";
 import { fetchSlackStatus } from "./slack.js";
 import { fetchPagerDutyStatus } from "./pagerduty.js";
+import { fetchFastlyStatus } from "./fastly.js";
+import { fetchGitLabStatus } from "./gitlab.js";
 
 const log = createLogger("fetcher:official");
 
@@ -19,6 +21,8 @@ const CUSTOM_FETCHERS: Record<string, () => Promise<ServiceStatus>> = {
   akamai: fetchAkamaiStatus,
   slack: fetchSlackStatus,
   pagerduty: fetchPagerDutyStatus,
+  fastly: fetchFastlyStatus,
+  gitlab: fetchGitLabStatus,
   "google-ai": fetchGcpStatus, // Google AI uses the same GCP status endpoint
 };
 

@@ -19,6 +19,7 @@ export async function fetchAiDailyCheck(model: string): Promise<VibeResult | nul
     if (!html) return null;
 
     const $ = cheerio.load(html);
+    $("script, style, noscript, svg").remove();
     const pageText = $("body").text();
     log.debug("fetched", { model, textLength: pageText.length });
 

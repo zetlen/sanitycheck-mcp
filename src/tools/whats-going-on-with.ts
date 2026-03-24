@@ -3,7 +3,6 @@ import { resolveService, type ServiceEntry } from "../registry.js";
 import { fetchOfficialDetail } from "../fetchers/official/index.js";
 import { fetchDowndetectorReports } from "../fetchers/aggregators/downdetector.js";
 import { fetchStatusGatorStatus } from "../fetchers/aggregators/statusgator.js";
-import { STATUS_EMOJI } from "../types.js";
 import type { ServiceDetail } from "../types.js";
 import type { FileCache } from "../cache.js";
 import { createLogger } from "../logger.js";
@@ -39,7 +38,21 @@ export async function handleWhatsGoingOnWith(
     }
   }
 
-  return { content: [{ type: "text", text: lines.join("\n\n---\n\n") }] };
+  const preamble = [
+    `<instructions>`,
+    `This is detailed status data for a specific service the user asked about.`,
+    `Synthesize the official status, component health, active incidents, and third-party reports into a clear assessment.`,
+    `If there are active incidents, lead with those — they're what the user most likely cares about.`,
+    `If everything is operational across all sources, say so briefly without listing every component.`,
+    `Third-party reports (Downdetector, StatusGator) provide independent corroboration — mention them if they disagree with the official status.`,
+    `</instructions>`,
+    ``,
+    `<data>`,
+  ].join("\n");
+
+  const epilogue = `</data>`;
+
+  return { content: [{ type: "text", text: `${preamble}\n${lines.join("\n\n")}\n${epilogue}` }] };
 }
 
 async function fetchServiceDetail(entry: ServiceEntry, cache?: FileCache): Promise<ServiceDetail> {
@@ -93,45 +106,65 @@ async function fallbackToDowndetector(
 
   const dd = await fetchDowndetectorReports(slug);
   if (dd) {
-    const text = `"${service}" is not in the known service list, but here's what downdetector.com shows:\n\nReports: ${dd.reportCount}\nTrend: ${dd.trend}\nSource: ${dd.url}`;
+    const text = [
+      `<instructions>`,
+      `"${service}" is not a service we track directly, but Downdetector has data. Summarize this for the user and note the limited data source.`,
+      `</instructions>`,
+      ``,
+      `<data>`,
+      `service: ${service} (not in tracked list, Downdetector only)`,
+      `downdetector_reports: ${dd.reportCount}`,
+      `trend: ${dd.trend}`,
+      `source: ${dd.url}`,
+      `</data>`,
+    ].join("\n");
     if (cache) cache.set(cacheKey, text, DD_TTL);
     return { content: [{ type: "text", text }] };
   }
 
-  return { content: [{ type: "text", text: `"${service}" is not in the known service list and no Downdetector page was found for it.` }] };
+  return { content: [{ type: "text", text: `"${service}" is not in the tracked service list and no Downdetector page was found for it. Let the user know you can't check this service's status.` }] };
 }
 
 function formatDetail(d: ServiceDetail): string {
   const lines: string[] = [];
-  lines.push(`${STATUS_EMOJI[d.status]} **${d.name}**: ${d.summary}`);
-  lines.push(`Source: ${d.source}`);
+  lines.push(`service: ${d.name}`);
+  lines.push(`status: ${d.status}`);
+  lines.push(`summary: ${d.summary}`);
+  lines.push(`source: ${d.source}`);
 
   if (d.components.length > 0) {
-    lines.push("\nComponents:");
-    for (const c of d.components) {
-      lines.push(`  ${STATUS_EMOJI[c.status]} ${c.name}: ${c.summary}`);
+    // Only include non-operational components to reduce noise
+    const degraded = d.components.filter((c) => c.status !== "operational");
+    if (degraded.length > 0) {
+      lines.push(`degraded_components:`);
+      for (const c of degraded) {
+        lines.push(`  - ${c.name}: ${c.status} — ${c.summary}`);
+      }
+    } else {
+      lines.push(`components: all ${d.components.length} operational`);
     }
   }
 
   if (d.incidents.length > 0) {
-    lines.push("\nActive Incidents:");
+    lines.push(`active_incidents:`);
     for (const i of d.incidents) {
-      lines.push(`  - ${i.title} (${i.status}) — updated ${i.updatedAt}`);
+      lines.push(`  - title: ${i.title}`);
+      lines.push(`    status: ${i.status}`);
+      lines.push(`    updated: ${i.updatedAt}`);
       if (i.components.length > 0) {
-        lines.push(`    Affecting: ${i.components.join(", ")}`);
+        lines.push(`    affecting: ${i.components.join(", ")}`);
       }
     }
   }
 
   if (d.thirdPartyReports.downdetector) {
     const dd = d.thirdPartyReports.downdetector;
-    const trendText = dd.trend === "stable" ? "trend unavailable" : dd.trend;
-    lines.push(`\nDowndetector: ${dd.reportCount} reports (${trendText})`);
+    lines.push(`downdetector: ${dd.reportCount} reports (trend: ${dd.trend})`);
   }
 
   if (d.thirdPartyReports.statusgator) {
     const sg = d.thirdPartyReports.statusgator;
-    lines.push(`\nStatusGator: ${STATUS_EMOJI[sg.status]} ${sg.summary}`);
+    lines.push(`statusgator: ${sg.status} — ${sg.summary}`);
   }
 
   return lines.join("\n");

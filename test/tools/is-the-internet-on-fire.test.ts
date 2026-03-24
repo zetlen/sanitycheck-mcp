@@ -30,7 +30,7 @@ describe("is_the_internet_on_fire", () => {
     });
 
     const result = await handleIsTheInternetOnFire({});
-    expect(result.content[0].text).toContain("🟢");
+    expect(result.content[0].text).toContain("TestService: operational");
   });
 
   it("filters by category", async () => {

@@ -1,7 +1,7 @@
 // src/tools/is-the-internet-on-fire.ts
 import { fetchOfficialStatus } from "../fetchers/official/index.js";
 import { getAllServices, getServicesByCategory } from "../registry.js";
-import { STATUS_EMOJI, type ServiceCategory, type ServiceStatus } from "../types.js";
+import type { ServiceCategory, ServiceStatus } from "../types.js";
 import { createLogger } from "../logger.js";
 import type { FileCache } from "../cache.js";
 
@@ -41,15 +41,32 @@ export async function handleIsTheInternetOnFire(
     })
   );
 
-  const lines = results.map((r) => {
+  const statusLines = results.map((r) => {
     if (r.status === "fulfilled") {
       const s = r.value;
-      return `${STATUS_EMOJI[s.status]} ${s.name}: ${s.summary}`;
+      return `${s.name}: ${s.status} — ${s.summary}`;
     }
-    return `⚪ Unknown: fetch failed`;
+    return `unknown: fetch failed`;
   });
 
+  const nonOperational = results.filter(
+    (r) => r.status === "fulfilled" && r.value.status !== "operational"
+  ).length;
+
+  const text = [
+    `<instructions>`,
+    `This is a snapshot of major internet infrastructure health. Summarize it for the user.`,
+    `Lead with the overall picture: ${nonOperational === 0 ? "everything is operational — keep it brief" : `${nonOperational} service(s) have issues — call those out clearly and mention what's affected`}.`,
+    `Do NOT list every service if they're all healthy — just say "all N services are operational" or similar.`,
+    `Only list services that are NOT operational, plus any with "unknown" status worth noting.`,
+    `</instructions>`,
+    ``,
+    `<data>`,
+    ...statusLines,
+    `</data>`,
+  ].join("\n");
+
   return {
-    content: [{ type: "text", text: lines.join("\n") }],
+    content: [{ type: "text", text }],
   };
 }

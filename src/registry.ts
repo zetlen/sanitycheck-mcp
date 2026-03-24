@@ -20,12 +20,12 @@ export const SERVICES: ServiceEntry[] = [
 
   // CDN
   { name: "Cloudflare", slug: "cloudflare", category: "cdn", statusUrl: "https://www.cloudflarestatus.com", statuspageId: "yh6f0r4529hb", downdetectorSlug: "cloudflare" },
-  { name: "Fastly", slug: "fastly", category: "cdn", statusUrl: "https://status.fastly.com", statuspageId: "889929qfzmz6", downdetectorSlug: "fastly" },
+  { name: "Fastly", slug: "fastly", category: "cdn", statusUrl: "https://www.fastlystatus.com", downdetectorSlug: "fastly" },
   { name: "Akamai", slug: "akamai", category: "cdn", statusUrl: "https://www.akamaistatus.com", downdetectorSlug: "akamai" },
 
   // Dev Tools
   { name: "GitHub", slug: "github", category: "devtools", statusUrl: "https://www.githubstatus.com", statuspageId: "kctbh9vbitze", downdetectorSlug: "github" },
-  { name: "GitLab", slug: "gitlab", category: "devtools", statusUrl: "https://status.gitlab.com", statuspageId: "5b36dc6502d06804c08349f7", downdetectorSlug: "gitlab" },
+  { name: "GitLab", slug: "gitlab", category: "devtools", statusUrl: "https://status.gitlab.com", downdetectorSlug: "gitlab" },
   { name: "Vercel", slug: "vercel", category: "devtools", statusUrl: "https://www.vercel-status.com", statuspageId: "2s0kfq7n6gkl", downdetectorSlug: "vercel" },
   { name: "Netlify", slug: "netlify", category: "devtools", statusUrl: "https://www.netlifystatus.com", statuspageId: "hyyhlpkm1l3q", downdetectorSlug: "netlify" },
 

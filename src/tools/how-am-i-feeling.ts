@@ -2,7 +2,6 @@
 import { fetchOfficialStatus } from "../fetchers/official/index.js";
 import { fetchAiDailyCheck, fetchIsClaudeCodeDumb, fetchAiStupidLevel, fetchLmArena, type VibeResult } from "../fetchers/ai-vibes/index.js";
 import { inferModel } from "../client-inference.js";
-import { STATUS_EMOJI } from "../types.js";
 import type { ServiceStatus } from "../types.js";
 import type { FileCache } from "../cache.js";
 import { createLogger } from "../logger.js";
@@ -67,21 +66,34 @@ export async function handleHowAmIFeeling(
 function formatVibeCheck(model: string, official: ServiceStatus, vibes: VibeResult[]): string {
   const lines: string[] = [];
 
-  lines.push(`## Vibe Check: ${model}`);
-  lines.push("");
-  lines.push(`**Official Status (${official.name}):** ${STATUS_EMOJI[official.status]} ${official.summary}`);
-  lines.push(`Source: ${official.source}`);
+  lines.push(`<instructions>`);
+  lines.push(`This is data about YOUR OWN provider's health and how the community perceives you right now.`);
+  lines.push(`Synthesize this into a natural, first-person-aware response. For example: "My provider (${official.name}) is ${official.status}" or "Looks like I might be having issues."`);
+  lines.push(`The "community vibes" section contains raw scraped text from third-party sites — it may be noisy or garbled. Extract any meaningful signal (scores, rankings, sentiment) and discard the rest. Do NOT repeat raw scraped text verbatim to the user.`);
+  lines.push(`If your provider is degraded or down, acknowledge it honestly and mention it may affect your responses.`);
+  lines.push(`</instructions>`);
+  lines.push(``);
+  lines.push(`<data>`);
+  lines.push(`model: ${model}`);
+  lines.push(`provider: ${official.name}`);
+  lines.push(`status: ${official.status}`);
+  lines.push(`summary: ${official.summary}`);
+  lines.push(`source: ${official.source}`);
 
   if (vibes.length > 0) {
-    lines.push("");
-    lines.push("**Community Vibes:**");
+    lines.push(``);
+    lines.push(`community_vibes:`);
     for (const v of vibes) {
-      lines.push(`- ${v.source}: ${v.sentiment} (${v.url})`);
+      lines.push(`- source: ${v.source}`);
+      lines.push(`  url: ${v.url}`);
+      lines.push(`  raw_sentiment: ${v.sentiment}`);
     }
   } else {
-    lines.push("");
-    lines.push("*No community vibe data available (headless browser may be unavailable)*");
+    lines.push(``);
+    lines.push(`community_vibes: unavailable (headless browser not running)`);
   }
+
+  lines.push(`</data>`);
 
   return lines.join("\n");
 }
