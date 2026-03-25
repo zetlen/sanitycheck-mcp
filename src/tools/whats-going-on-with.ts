@@ -154,14 +154,33 @@ function formatDetail(d: ServiceDetail): string {
   }
 
   if (d.incidents.length > 0) {
+    // Sort by most recently updated first
+    const sorted = [...d.incidents].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    );
+    const MAX_INCIDENTS = 5;
+    const shown = sorted.slice(0, MAX_INCIDENTS);
+
     lines.push(`active_incidents:`);
-    for (const i of d.incidents) {
-      lines.push(`  - title: ${i.title}`);
-      lines.push(`    status: ${i.status}`);
-      lines.push(`    updated: ${i.updatedAt}`);
-      if (i.components.length > 0) {
-        lines.push(`    affecting: ${i.components.join(", ")}`);
+    for (const inc of shown) {
+      lines.push(`  - title: ${inc.title}`);
+      lines.push(`    status: ${inc.status}`);
+      lines.push(`    updated: ${inc.updatedAt}`);
+      if (inc.components.length > 0) {
+        // Cap affected components to avoid listing dozens of PoPs
+        const MAX_COMPONENTS = 8;
+        const comps =
+          inc.components.length > MAX_COMPONENTS
+            ? [
+                ...inc.components.slice(0, MAX_COMPONENTS),
+                `+${inc.components.length - MAX_COMPONENTS} more`,
+              ]
+            : inc.components;
+        lines.push(`    affecting: ${comps.join(", ")}`);
       }
+    }
+    if (sorted.length > MAX_INCIDENTS) {
+      lines.push(`  (+${sorted.length - MAX_INCIDENTS} older incidents not shown)`);
     }
   }
 
