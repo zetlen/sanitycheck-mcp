@@ -8,6 +8,7 @@ import {
   type VibeResult,
 } from "../fetchers/ai-vibes/index.js";
 import { inferModel } from "../client-inference.js";
+import { checkSystem, formatSystemCheck, type SystemCheck } from "../system-check.js";
 import type { ServiceDetail } from "../types.js";
 import type { FileCache } from "../cache.js";
 import { createLogger } from "../logger.js";
@@ -54,11 +55,12 @@ export async function handleHowAmIFeeling(
 
   const providerSlug = MODEL_TO_PROVIDER[model] ?? model;
 
-  // Fetch official status + all vibes in parallel
-  const [officialResult, ...vibeResults] = await Promise.allSettled([
+  // Fetch official status, vibes, and system check in parallel
+  const [officialResult, systemResult, ...vibeResults] = await Promise.allSettled([
     fetchWithCache(cache, `detail--${providerSlug}`, OFFICIAL_TTL, () =>
       fetchOfficialDetail(providerSlug),
     ),
+    checkSystem(),
     fetchWithCache(cache, `vibes--aidailycheck--${model}`, VIBES_TTL, () =>
       fetchAiDailyCheck(model),
     ),
@@ -89,6 +91,12 @@ export async function handleHowAmIFeeling(
     log.warn("official-fetch-failed", { providerSlug, error: String(officialResult.reason) });
   }
 
+  const system: SystemCheck | null =
+    systemResult.status === "fulfilled" ? systemResult.value : null;
+  if (systemResult.status === "rejected") {
+    log.warn("system-check-failed", { error: String(systemResult.reason) });
+  }
+
   const vibes: VibeResult[] = [];
   const vibeNames = ["aidailycheck", "isclaudecodedumb", "aistupidlevel", "lmarena"];
   for (let i = 0; i < vibeResults.length; i++) {
@@ -100,11 +108,21 @@ export async function handleHowAmIFeeling(
     }
   }
 
-  log.debug("results", { model, officialStatus: official.status, vibeCount: vibes.length });
-  return { content: [{ type: "text", text: formatSanityCheck(model, official, vibes) }] };
+  log.debug("results", {
+    model,
+    officialStatus: official.status,
+    vibeCount: vibes.length,
+    hasSystem: !!system,
+  });
+  return { content: [{ type: "text", text: formatSanityCheck(model, official, vibes, system) }] };
 }
 
-function formatSanityCheck(model: string, official: ServiceDetail, vibes: VibeResult[]): string {
+function formatSanityCheck(
+  model: string,
+  official: ServiceDetail,
+  vibes: VibeResult[],
+  system: SystemCheck | null,
+): string {
   const lines: string[] = [];
 
   lines.push(`model: ${model}`);
@@ -133,6 +151,11 @@ function formatSanityCheck(model: string, official: ServiceDetail, vibes: VibeRe
         lines.push(`  affecting: ${inc.components.join(", ")}`);
       }
     }
+  }
+
+  if (system) {
+    lines.push(``);
+    lines.push(formatSystemCheck(system));
   }
 
   if (vibes.length > 0) {
