@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/zetlen/sanitycheck-mcp/compare/v0.1.3...v0.2.0) (2026-03-25)
+
+
+### Features
+
+* add local system checks to how_am_i_feeling ([e413c2e](https://github.com/zetlen/sanitycheck-mcp/commit/e413c2e80c0889bf7d58635dc85c6f0a3153c651))
+
+
+### Bug Fixes
+
+* use real memory pressure instead of misleading os.freemem() ([7bf855c](https://github.com/zetlen/sanitycheck-mcp/commit/7bf855c5b9a87697a32d50e0148d2ba815e13d68))
+
 ## [0.1.3](https://github.com/zetlen/sanitycheck-mcp/compare/v0.1.2...v0.1.3) (2026-03-25)
 
 
