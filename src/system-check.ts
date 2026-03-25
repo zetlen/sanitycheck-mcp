@@ -1,5 +1,7 @@
 // src/system-check.ts
-import { cpus, loadavg, totalmem, freemem } from "node:os";
+import { cpus, loadavg, totalmem, freemem, platform } from "node:os";
+import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { createLogger } from "./logger.js";
 
 const log = createLogger("system-check");
@@ -13,13 +15,52 @@ export interface SystemCheck {
   };
   memory: {
     totalMB: number;
-    freeMB: number;
-    usedPct: number;
+    availableMB: number;
+    usedPct: number; // real usage excluding reclaimable caches
   };
   network: {
     latencyMs: number | null; // round-trip to a reliable endpoint
     status: "ok" | "slow" | "failing";
   };
+}
+
+/**
+ * Get available memory that accounts for reclaimable caches.
+ * os.freemem() only reports truly free pages, which on macOS and Linux
+ * is misleadingly low because the OS fills RAM with file caches that
+ * can be reclaimed instantly.
+ */
+function getAvailableMemoryBytes(): number {
+  const os = platform();
+
+  if (os === "linux") {
+    try {
+      const meminfo = readFileSync("/proc/meminfo", "utf-8");
+      const match = meminfo.match(/MemAvailable:\s+(\d+)\s+kB/);
+      if (match) return parseInt(match[1], 10) * 1024;
+    } catch (err) {
+      log.warn("meminfo-failed", { error: String(err) });
+    }
+  }
+
+  if (os === "darwin") {
+    try {
+      const output = execFileSync("memory_pressure", {
+        encoding: "utf-8",
+        timeout: 3000,
+      });
+      const match = output.match(/System-wide memory free percentage:\s+(\d+)%/);
+      if (match) {
+        const freePct = parseInt(match[1], 10);
+        return Math.round(totalmem() * (freePct / 100));
+      }
+    } catch (err) {
+      log.warn("memory-pressure-failed", { error: String(err) });
+    }
+  }
+
+  // Fallback: os.freemem() — inaccurate but better than nothing
+  return freemem();
 }
 
 async function measureNetworkLatency(): Promise<{
@@ -43,7 +84,7 @@ async function measureNetworkLatency(): Promise<{
 
       if (!response.ok) continue;
 
-      const status = latencyMs > 2000 ? "slow" : latencyMs > 500 ? "slow" : "ok";
+      const status = latencyMs > 500 ? "slow" : "ok";
       return { latencyMs, status };
     } catch (err) {
       log.warn("network-probe-failed", { url, error: String(err) });
@@ -57,10 +98,10 @@ export async function checkSystem(): Promise<SystemCheck> {
   const cores = cpus().length;
   const [load1, load5] = loadavg();
   const totalBytes = totalmem();
-  const freeBytes = freemem();
+  const availableBytes = getAvailableMemoryBytes();
   const totalMB = Math.round(totalBytes / 1024 / 1024);
-  const freeMB = Math.round(freeBytes / 1024 / 1024);
-  const usedPct = Math.round(((totalBytes - freeBytes) / totalBytes) * 100);
+  const availableMB = Math.round(availableBytes / 1024 / 1024);
+  const usedPct = Math.round(((totalBytes - availableBytes) / totalBytes) * 100);
   const loadPct = Math.round((load1 / cores) * 100);
 
   const network = await measureNetworkLatency();
@@ -72,7 +113,7 @@ export async function checkSystem(): Promise<SystemCheck> {
       loadAvg5m: Math.round(load5 * 100) / 100,
       loadPct,
     },
-    memory: { totalMB, freeMB, usedPct },
+    memory: { totalMB, availableMB, usedPct },
     network,
   };
 
@@ -101,14 +142,14 @@ export function formatSystemCheck(sys: SystemCheck): string {
   }
 
   lines.push(`  memory_total: ${sys.memory.totalMB}MB`);
-  lines.push(`  memory_free: ${sys.memory.freeMB}MB`);
+  lines.push(`  memory_available: ${sys.memory.availableMB}MB`);
   lines.push(`  memory_used: ${sys.memory.usedPct}%`);
 
-  if (sys.memory.usedPct >= 95) {
+  if (sys.memory.usedPct >= 90) {
     lines.push(
       `  memory_warning: memory almost exhausted at ${sys.memory.usedPct}% — expect swapping`,
     );
-  } else if (sys.memory.usedPct >= 85) {
+  } else if (sys.memory.usedPct >= 75) {
     lines.push(`  memory_warning: memory pressure at ${sys.memory.usedPct}%`);
   }
 
