@@ -1,8 +1,8 @@
 // src/tools/how-am-i-feeling.ts
-import { fetchOfficialStatus } from "../fetchers/official/index.js";
+import { fetchOfficialDetail } from "../fetchers/official/index.js";
 import { fetchAiDailyCheck, fetchIsClaudeCodeDumb, fetchAiStupidLevel, fetchLmArena, type VibeResult } from "../fetchers/ai-vibes/index.js";
 import { inferModel } from "../client-inference.js";
-import type { ServiceStatus } from "../types.js";
+import type { ServiceDetail } from "../types.js";
 import type { FileCache } from "../cache.js";
 import { createLogger } from "../logger.js";
 
@@ -45,16 +45,16 @@ export async function handleHowAmIFeeling(
 
   // Fetch official status + all vibes in parallel
   const [officialResult, ...vibeResults] = await Promise.allSettled([
-    fetchWithCache(cache, `official--${providerSlug}`, OFFICIAL_TTL, () => fetchOfficialStatus(providerSlug)),
+    fetchWithCache(cache, `detail--${providerSlug}`, OFFICIAL_TTL, () => fetchOfficialDetail(providerSlug)),
     fetchWithCache(cache, `vibes--aidailycheck--${model}`, VIBES_TTL, () => fetchAiDailyCheck(model)),
     fetchWithCache(cache, `vibes--isclaudecodedumb--${model}`, VIBES_TTL, () => fetchIsClaudeCodeDumb(model)),
     fetchWithCache(cache, `vibes--aistupidlevel--${model}`, VIBES_TTL, () => fetchAiStupidLevel(model)),
     fetchWithCache(cache, `vibes--lmarena--${model}`, VIBES_TTL, () => fetchLmArena(model)),
   ]);
 
-  const official: ServiceStatus = officialResult.status === "fulfilled" && officialResult.value
+  const official: ServiceDetail = officialResult.status === "fulfilled" && officialResult.value
     ? officialResult.value
-    : { name: providerSlug, status: "unknown", summary: "Could not fetch official status", updatedAt: new Date().toISOString(), source: "" };
+    : { name: providerSlug, status: "unknown", summary: "Could not fetch official status", updatedAt: new Date().toISOString(), source: "", components: [], incidents: [], thirdPartyReports: {} };
 
   if (officialResult.status === "rejected") {
     log.warn("official-fetch-failed", { providerSlug, error: String(officialResult.reason) });
@@ -75,7 +75,7 @@ export async function handleHowAmIFeeling(
   return { content: [{ type: "text", text: formatSanityCheck(model, official, vibes) }] };
 }
 
-function formatSanityCheck(model: string, official: ServiceStatus, vibes: VibeResult[]): string {
+function formatSanityCheck(model: string, official: ServiceDetail, vibes: VibeResult[]): string {
   const lines: string[] = [];
 
   lines.push(`model: ${model}`);
@@ -83,6 +83,28 @@ function formatSanityCheck(model: string, official: ServiceStatus, vibes: VibeRe
   lines.push(`status: ${official.status}`);
   lines.push(`summary: ${official.summary}`);
   lines.push(`source: ${official.source}`);
+
+  const degraded = official.components.filter((c) => c.status !== "operational");
+  if (degraded.length > 0) {
+    lines.push(``);
+    lines.push(`degraded_components:`);
+    for (const c of degraded) {
+      lines.push(`- ${c.name}: ${c.status} — ${c.summary}`);
+    }
+  }
+
+  if (official.incidents.length > 0) {
+    lines.push(``);
+    lines.push(`active_incidents:`);
+    for (const inc of official.incidents) {
+      lines.push(`- title: ${inc.title}`);
+      lines.push(`  status: ${inc.status}`);
+      lines.push(`  updated: ${inc.updatedAt}`);
+      if (inc.components.length > 0) {
+        lines.push(`  affecting: ${inc.components.join(", ")}`);
+      }
+    }
+  }
 
   if (vibes.length > 0) {
     lines.push(``);
