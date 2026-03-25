@@ -114,7 +114,7 @@ export const SERVICES: ServiceEntry[] = [
     name: "Google AI",
     slug: "google-ai",
     category: "ai",
-    statusUrl: "https://status.cloud.google.com/",
+    statusUrl: "https://aistudio.google.com/status",
     downdetectorSlug: "google-cloud",
   },
 

@@ -23,7 +23,7 @@ const CUSTOM_FETCHERS: Record<string, () => Promise<ServiceStatus>> = {
   pagerduty: fetchPagerDutyStatus,
   fastly: fetchFastlyStatus,
   gitlab: fetchGitLabStatus,
-  "google-ai": fetchGcpStatus, // Google AI uses the same GCP status endpoint
+  "google-ai": fetchGcpStatus, // Google AI Studio status page is a SPA; GCP status is a reasonable proxy
 };
 
 function makeUnknownStatus(name: string, reason: string): ServiceStatus {
