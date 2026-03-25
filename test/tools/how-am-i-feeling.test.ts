@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../../src/fetchers/official/index.js", () => ({
-  fetchOfficialStatus: vi.fn(),
+  fetchOfficialDetail: vi.fn(),
 }));
 
 vi.mock("../../src/fetchers/ai-vibes/index.js", () => ({
@@ -13,18 +13,32 @@ vi.mock("../../src/fetchers/ai-vibes/index.js", () => ({
 }));
 
 import { handleHowAmIFeeling } from "../../src/tools/how-am-i-feeling.js";
-import { fetchOfficialStatus } from "../../src/fetchers/official/index.js";
+import { fetchOfficialDetail } from "../../src/fetchers/official/index.js";
 import * as vibes from "../../src/fetchers/ai-vibes/index.js";
 
-const mockOfficial = vi.mocked(fetchOfficialStatus);
+const mockOfficialDetail = vi.mocked(fetchOfficialDetail);
 const mockAiDaily = vi.mocked(vibes.fetchAiDailyCheck);
 const mockClaudeDumb = vi.mocked(vibes.fetchIsClaudeCodeDumb);
 const mockStupidLevel = vi.mocked(vibes.fetchAiStupidLevel);
 const mockLmArena = vi.mocked(vibes.fetchLmArena);
 
+function makeDetail(overrides = {}) {
+  return {
+    name: "Anthropic",
+    status: "operational",
+    summary: "All systems operational",
+    updatedAt: "2026-03-23T10:00:00Z",
+    source: "https://status.anthropic.com",
+    components: [],
+    incidents: [],
+    thirdPartyReports: {},
+    ...overrides,
+  };
+}
+
 describe("how_am_i_feeling", () => {
   beforeEach(() => {
-    mockOfficial.mockReset();
+    mockOfficialDetail.mockReset();
     mockAiDaily.mockReset();
     mockClaudeDumb.mockReset();
     mockStupidLevel.mockReset();
@@ -32,14 +46,27 @@ describe("how_am_i_feeling", () => {
   });
 
   it("returns combined status for claude", async () => {
-    mockOfficial.mockResolvedValueOnce({
-      name: "Anthropic", status: "operational", summary: "All systems operational",
-      updatedAt: "2026-03-23T10:00:00Z", source: "https://status.anthropic.com",
+    mockOfficialDetail.mockResolvedValueOnce(makeDetail());
+    mockAiDaily.mockResolvedValueOnce({
+      source: "aidailycheck.com",
+      sentiment: "Genius 90%",
+      url: "https://aidailycheck.com",
     });
-    mockAiDaily.mockResolvedValueOnce({ source: "aidailycheck.com", sentiment: "Genius 90%", url: "https://aidailycheck.com" });
-    mockClaudeDumb.mockResolvedValueOnce({ source: "isclaudecodedumb.today", sentiment: "Not dumb today", url: "https://www.isclaudecodedumb.today/" });
-    mockStupidLevel.mockResolvedValueOnce({ source: "aistupidlevel.info", sentiment: "Score: 92/100", url: "https://aistupidlevel.info" });
-    mockLmArena.mockResolvedValueOnce({ source: "lmarena.ai", sentiment: "Elo: 1250", url: "https://lmarena.ai" });
+    mockClaudeDumb.mockResolvedValueOnce({
+      source: "isclaudecodedumb.today",
+      sentiment: "Not dumb today",
+      url: "https://www.isclaudecodedumb.today/",
+    });
+    mockStupidLevel.mockResolvedValueOnce({
+      source: "aistupidlevel.info",
+      sentiment: "Score: 92/100",
+      url: "https://aistupidlevel.info",
+    });
+    mockLmArena.mockResolvedValueOnce({
+      source: "lmarena.ai",
+      sentiment: "Elo: 1250",
+      url: "https://lmarena.ai",
+    });
 
     const result = await handleHowAmIFeeling({ model: "claude" }, null);
     const text = result.content[0].text;
@@ -54,11 +81,12 @@ describe("how_am_i_feeling", () => {
   });
 
   it("auto-detects claude model from claude-code clientName when model is undefined", async () => {
-    mockOfficial.mockResolvedValueOnce({
-      name: "Anthropic", status: "operational", summary: "All systems operational",
-      updatedAt: "2026-03-23T10:00:00Z", source: "https://status.anthropic.com",
+    mockOfficialDetail.mockResolvedValueOnce(makeDetail());
+    mockAiDaily.mockResolvedValueOnce({
+      source: "aidailycheck.com",
+      sentiment: "Genius 90%",
+      url: "https://aidailycheck.com",
     });
-    mockAiDaily.mockResolvedValueOnce({ source: "aidailycheck.com", sentiment: "Genius 90%", url: "https://aidailycheck.com" });
     mockClaudeDumb.mockResolvedValueOnce(null);
     mockStupidLevel.mockResolvedValueOnce(null);
     mockLmArena.mockResolvedValueOnce(null);
@@ -67,5 +95,28 @@ describe("how_am_i_feeling", () => {
     const text = result.content[0].text;
     expect(text).toContain("Anthropic");
     expect(text).toContain("claude");
+  });
+
+  it("includes degraded components in output", async () => {
+    mockOfficialDetail.mockResolvedValueOnce(
+      makeDetail({
+        status: "degraded",
+        summary: "Partial degradation",
+        components: [
+          { name: "API", status: "operational", summary: "Working" },
+          { name: "SIP Endpoints", status: "degraded", summary: "Elevated errors" },
+        ],
+      }),
+    );
+    mockAiDaily.mockResolvedValueOnce(null);
+    mockClaudeDumb.mockResolvedValueOnce(null);
+    mockStupidLevel.mockResolvedValueOnce(null);
+    mockLmArena.mockResolvedValueOnce(null);
+
+    const result = await handleHowAmIFeeling({ model: "claude" }, null);
+    const text = result.content[0].text;
+    expect(text).toContain("degraded_components:");
+    expect(text).toContain("SIP Endpoints");
+    expect(text).not.toContain("API: operational");
   });
 });
