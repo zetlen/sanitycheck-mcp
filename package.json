@@ -5,6 +5,10 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zetlen/sanitycheck-mcp"
+  },
   "bin": {
     "sanitycheck-mcp": "dist/index.js"
   },
