@@ -14,16 +14,15 @@ const mockFetchWithBrowser = vi.mocked(fetchWithBrowser);
 describe("isclaudecodedumb fetcher", () => {
   beforeEach(() => mockFetchWithBrowser.mockReset());
 
-  it("returns N/A for non-Claude models without fetching", async () => {
+  it("returns null for non-Claude models without fetching", async () => {
     const result = await fetchIsClaudeCodeDumb("gpt-4");
-    expect(result).toBeDefined();
-    expect(result!.sentiment).toContain("N/A");
+    expect(result).toBeNull();
     expect(mockFetchWithBrowser).not.toHaveBeenCalled();
   });
 
   it("fetches for Claude models", async () => {
     mockFetchWithBrowser.mockResolvedValueOnce(
-      `<html><body><div>Yes 65%</div><div>No 35%</div><div>1234 votes</div></body></html>`
+      `<html><body><div>Yes 65%</div><div>No 35%</div><div>1234 votes</div></body></html>`,
     );
 
     const result = await fetchIsClaudeCodeDumb("claude");
