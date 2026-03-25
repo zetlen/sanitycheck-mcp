@@ -51,7 +51,11 @@ export async function fetchAwsStatus(): Promise<ServiceStatus> {
       };
     }
 
-    if (pageText.includes("issue") || pageText.includes("degraded") || pageText.includes("elevated")) {
+    if (
+      pageText.includes("issue") ||
+      pageText.includes("degraded") ||
+      pageText.includes("elevated")
+    ) {
       return {
         name: "AWS",
         status: "degraded",

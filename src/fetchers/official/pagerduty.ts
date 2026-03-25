@@ -34,7 +34,11 @@ export async function fetchPagerDutyStatus(): Promise<ServiceStatus> {
           data?.layout?.layout_settings?.statusPage?.globalStatusHeadline;
         if (headline) {
           const lc = headline.toLowerCase();
-          if (lc.includes("running smoothly") || lc.includes("operational") || lc.includes("all systems")) {
+          if (
+            lc.includes("running smoothly") ||
+            lc.includes("operational") ||
+            lc.includes("all systems")
+          ) {
             return {
               name: "PagerDuty",
               status: "operational",

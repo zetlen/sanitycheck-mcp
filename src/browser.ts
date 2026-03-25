@@ -57,7 +57,11 @@ export async function getBrowser(): Promise<import("puppeteer-core").Browser | n
   return launchPromise;
 }
 
-export async function fetchWithBrowser(url: string, waitForSelector?: string, timeoutMs = 15_000): Promise<string | null> {
+export async function fetchWithBrowser(
+  url: string,
+  waitForSelector?: string,
+  timeoutMs = 15_000,
+): Promise<string | null> {
   const browser = await getBrowser();
   if (!browser) return null;
 

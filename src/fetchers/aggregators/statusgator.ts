@@ -42,7 +42,11 @@ export async function fetchStatusGatorStatus(slug: string): Promise<StatusGatorR
     } else if (pageText.includes("outage") || pageText.includes("major")) {
       status = "outage";
       summary = "Service outage reported";
-    } else if (pageText.includes("degraded") || pageText.includes("partial") || pageText.includes("minor")) {
+    } else if (
+      pageText.includes("degraded") ||
+      pageText.includes("partial") ||
+      pageText.includes("minor")
+    ) {
       status = "degraded";
       summary = "Degraded performance reported";
     }

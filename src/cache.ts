@@ -30,7 +30,9 @@ export class FileCache {
       const entry: CacheEntry<T> = JSON.parse(raw);
       if (Date.now() >= entry.expiresAt) {
         log.debug("expired", { key, ttlRemaining: 0 });
-        try { unlinkSync(file); } catch {}
+        try {
+          unlinkSync(file);
+        } catch {}
         return null;
       }
       log.debug("hit", { key, ttlRemaining: entry.expiresAt - Date.now() });
@@ -51,7 +53,9 @@ export class FileCache {
       log.debug("write", { key, file });
     } catch (err) {
       log.warn("write-failed", { key, error: String(err) });
-      try { unlinkSync(tmp); } catch {}
+      try {
+        unlinkSync(tmp);
+      } catch {}
     }
   }
 

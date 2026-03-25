@@ -1,5 +1,11 @@
 // src/fetchers/statuspage.ts
-import type { ServiceStatus, ServiceDetail, StatusLevel, ComponentStatus, Incident } from "../types.js";
+import type {
+  ServiceStatus,
+  ServiceDetail,
+  StatusLevel,
+  ComponentStatus,
+  Incident,
+} from "../types.js";
 import { createLogger } from "../logger.js";
 
 const log = createLogger("fetcher:statuspage");
@@ -99,19 +105,34 @@ export async function fetchStatuspageSummary(
           });
           if (fallbackResponse.ok) {
             const data = await fallbackResponse.json();
-            log.debug("fetched-fallback", { serviceName, fallbackUrl, elapsed: Date.now() - start });
+            log.debug("fetched-fallback", {
+              serviceName,
+              fallbackUrl,
+              elapsed: Date.now() - start,
+            });
             const status = parseStatuspageStatus(data, serviceName, baseUrl);
             const detail = parseStatuspageDetail(data, serviceName, baseUrl);
             return { status, detail };
           }
-          log.warn("fallback-http-error", { serviceName, fallbackUrl, status: fallbackResponse.status });
+          log.warn("fallback-http-error", {
+            serviceName,
+            fallbackUrl,
+            status: fallbackResponse.status,
+          });
         } catch (fallbackErr) {
-          log.error("fallback-fetch-error", { serviceName, fallbackUrl, error: String(fallbackErr) });
+          log.error("fallback-fetch-error", {
+            serviceName,
+            fallbackUrl,
+            error: String(fallbackErr),
+          });
         }
       }
 
       const unknown = makeUnknown(serviceName, baseUrl, `HTTP ${response.status}`);
-      return { status: unknown, detail: { ...unknown, components: [], incidents: [], thirdPartyReports: {} } };
+      return {
+        status: unknown,
+        detail: { ...unknown, components: [], incidents: [], thirdPartyReports: {} },
+      };
     }
 
     const data = await response.json();
@@ -123,7 +144,10 @@ export async function fetchStatuspageSummary(
   } catch (err) {
     log.error("fetch-error", { serviceName, url, error: String(err), elapsed: Date.now() - start });
     const unknown = makeUnknown(serviceName, baseUrl, String(err));
-    return { status: unknown, detail: { ...unknown, components: [], incidents: [], thirdPartyReports: {} } };
+    return {
+      status: unknown,
+      detail: { ...unknown, components: [], incidents: [], thirdPartyReports: {} },
+    };
   }
 }
 

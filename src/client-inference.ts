@@ -6,7 +6,7 @@ const log = createLogger("client");
 export const CLIENT_MODEL_MAP: Record<string, string> = {
   "claude-code": "claude",
   "claude-desktop": "claude",
-  "copilot": "gpt",
+  copilot: "gpt",
   "github-copilot": "gpt",
   "codex-mcp-client": "gpt",
   "gemini-cli-mcp-client": "gemini",

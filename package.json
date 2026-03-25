@@ -2,7 +2,9 @@
   "name": "sanitycheck-mcp",
   "version": "0.1.1",
   "description": "MCP server that gives AI coding agents awareness of internet and service health",
-  "main": "dist/index.js",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
   "bin": {
     "sanitycheck-mcp": "dist/index.js"
   },
@@ -10,17 +12,19 @@
     "dist",
     "README.md"
   ],
+  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "lint": "oxlint src/",
+    "fmt": "oxfmt src/",
+    "fmt:check": "oxfmt --check src/",
+    "prepare": "lefthook install"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
     "cheerio": "^1.2.0",
@@ -29,7 +33,12 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@types/node": "^25.5.0",
+    "lefthook": "^2.1.4",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.1"
   }

@@ -29,7 +29,7 @@ export async function handleWhatsGoingOnWith(
   }
 
   const results = await Promise.allSettled(
-    matches.map((entry) => fetchServiceDetail(entry, cache))
+    matches.map((entry) => fetchServiceDetail(entry, cache)),
   );
 
   const lines: string[] = [];
@@ -54,18 +54,28 @@ async function fetchServiceDetail(entry: ServiceEntry, cache?: FileCache): Promi
 
   const [detail, dd, sg] = await Promise.allSettled([
     fetchOfficialDetail(entry.slug),
-    entry.downdetectorSlug ? fetchDowndetectorReports(entry.downdetectorSlug) : Promise.resolve(null),
+    entry.downdetectorSlug
+      ? fetchDowndetectorReports(entry.downdetectorSlug)
+      : Promise.resolve(null),
     fetchStatusGatorStatus(entry.slug),
   ]);
 
   if (detail.status === "rejected") {
     log.warn("official-detail-failed", { slug: entry.slug, error: String(detail.reason) });
   }
-  const result = detail.status === "fulfilled" ? detail.value : {
-    name: entry.name, status: "unknown" as const, summary: "Failed to fetch",
-    updatedAt: new Date().toISOString(), source: entry.statusUrl,
-    components: [], incidents: [], thirdPartyReports: {},
-  };
+  const result =
+    detail.status === "fulfilled"
+      ? detail.value
+      : {
+          name: entry.name,
+          status: "unknown" as const,
+          summary: "Failed to fetch",
+          updatedAt: new Date().toISOString(),
+          source: entry.statusUrl,
+          components: [],
+          incidents: [],
+          thirdPartyReports: {},
+        };
 
   if (dd.status === "fulfilled" && dd.value) {
     result.thirdPartyReports.downdetector = {
@@ -113,7 +123,14 @@ async function fallbackToDowndetector(
     return { content: [{ type: "text", text }] };
   }
 
-  return { content: [{ type: "text", text: `"${service}" is not in the tracked service list and no Downdetector data was found.` }] };
+  return {
+    content: [
+      {
+        type: "text",
+        text: `"${service}" is not in the tracked service list and no Downdetector data was found.`,
+      },
+    ],
+  };
 }
 
 function formatDetail(d: ServiceDetail): string {

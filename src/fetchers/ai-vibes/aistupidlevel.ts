@@ -27,15 +27,20 @@ export async function fetchAiStupidLevel(model: string): Promise<VibeResult | nu
     // Extract scores and rankings for the requested model
     // The site shows benchmark scores across 9 dimensions
     const modelLower = model.toLowerCase();
-    const lines = pageText.split("\n").map((l) => l.trim()).filter(Boolean);
-    const relevant = lines.filter((l) =>
-      l.toLowerCase().includes(modelLower) &&
-      /\d/.test(l) // must contain a number (score, rank, etc.)
-    ).slice(0, 5);
+    const lines = pageText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const relevant = lines
+      .filter(
+        (l) => l.toLowerCase().includes(modelLower) && /\d/.test(l), // must contain a number (score, rank, etc.)
+      )
+      .slice(0, 5);
 
-    const sentiment = relevant.length > 0
-      ? relevant.join("; ").slice(0, 200)
-      : `No specific benchmark data found for "${model}"`;
+    const sentiment =
+      relevant.length > 0
+        ? relevant.join("; ").slice(0, 200)
+        : `No specific benchmark data found for "${model}"`;
 
     return { source: "aistupidlevel.info", sentiment, url };
   } catch (err) {

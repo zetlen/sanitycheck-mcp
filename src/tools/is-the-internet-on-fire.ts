@@ -17,9 +17,7 @@ export async function handleIsTheInternetOnFire(
   params: Params,
   cache?: FileCache,
 ): Promise<{ content: { type: "text"; text: string }[] }> {
-  const services = params.category
-    ? getServicesByCategory(params.category)
-    : getAllServices();
+  const services = params.category ? getServicesByCategory(params.category) : getAllServices();
 
   log.debug("fetching", { count: services.length, category: params.category ?? "all" });
 
@@ -38,7 +36,7 @@ export async function handleIsTheInternetOnFire(
       }
 
       return status;
-    })
+    }),
   );
 
   const statusLines = results.map((r, i) => {

@@ -26,12 +26,16 @@ export async function fetchAiDailyCheck(model: string): Promise<VibeResult | nul
     // Extract sentiment for the requested model from the page text
     // The site shows voting results like "Genius", "Good", "Bad", "Terrible"
     const modelLower = model.toLowerCase();
-    const lines = pageText.split("\n").map((l) => l.trim()).filter(Boolean);
+    const lines = pageText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
     const relevant = lines.filter((l) => l.toLowerCase().includes(modelLower));
 
-    const sentiment = relevant.length > 0
-      ? relevant.join("; ").slice(0, 200)
-      : `No specific data found for "${model}"`;
+    const sentiment =
+      relevant.length > 0
+        ? relevant.join("; ").slice(0, 200)
+        : `No specific data found for "${model}"`;
 
     return { source: "aidailycheck.com", sentiment, url };
   } catch (err) {

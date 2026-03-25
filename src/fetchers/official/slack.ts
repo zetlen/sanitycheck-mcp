@@ -21,7 +21,7 @@ export async function fetchSlackStatus(): Promise<ServiceStatus> {
       return makeUnknown(`HTTP ${response.status}`);
     }
 
-    const data = await response.json() as { status: string; active_incidents: any[] };
+    const data = (await response.json()) as { status: string; active_incidents: any[] };
     log.debug("fetched", { elapsed: Date.now() - start, status: data.status });
 
     if (data.status === "ok" && (!data.active_incidents || data.active_incidents.length === 0)) {
@@ -35,15 +35,17 @@ export async function fetchSlackStatus(): Promise<ServiceStatus> {
     }
 
     const incidents = data.active_incidents ?? [];
-    const hasOutage = incidents.some((i: any) =>
-      i.type?.toLowerCase().includes("outage") ||
-      i.title?.toLowerCase().includes("outage")
+    const hasOutage = incidents.some(
+      (i: any) =>
+        i.type?.toLowerCase().includes("outage") || i.title?.toLowerCase().includes("outage"),
     );
 
     return {
       name: "Slack",
       status: hasOutage ? "outage" : "degraded",
-      summary: incidents.map((i: any) => i.title ?? i.type ?? "Incident").join("; ") || "Active incidents reported",
+      summary:
+        incidents.map((i: any) => i.title ?? i.type ?? "Incident").join("; ") ||
+        "Active incidents reported",
       updatedAt: new Date().toISOString(),
       source: STATUS_URL,
     };

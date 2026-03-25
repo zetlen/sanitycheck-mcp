@@ -21,14 +21,24 @@ export async function fetchAzureStatus(): Promise<ServiceStatus> {
 
     // Azure status page uses icons/classes to indicate status
     // Look for non-good status indicators
-    const issues = $(".status-icon--unhealthy, .status-icon--warning, .status-icon--information").length;
+    const issues = $(
+      ".status-icon--unhealthy, .status-icon--warning, .status-icon--information",
+    ).length;
 
     if (issues === 0) {
-      return { name: "Azure", status: "operational", summary: "All systems operational", updatedAt: new Date().toISOString(), source: STATUS_URL };
+      return {
+        name: "Azure",
+        status: "operational",
+        summary: "All systems operational",
+        updatedAt: new Date().toISOString(),
+        source: STATUS_URL,
+      };
     }
 
     // Extract issue summaries from the page
-    const summaryText = $(".region-status-summary, .status-description").first().text().trim() || `${issues} service(s) reporting issues`;
+    const summaryText =
+      $(".region-status-summary, .status-description").first().text().trim() ||
+      `${issues} service(s) reporting issues`;
     return {
       name: "Azure",
       status: issues > 3 ? "outage" : "degraded",
@@ -43,5 +53,11 @@ export async function fetchAzureStatus(): Promise<ServiceStatus> {
 }
 
 function makeUnknown(reason: string): ServiceStatus {
-  return { name: "Azure", status: "unknown", summary: `Status page unreachable (${reason})`, updatedAt: new Date().toISOString(), source: STATUS_URL };
+  return {
+    name: "Azure",
+    status: "unknown",
+    summary: `Status page unreachable (${reason})`,
+    updatedAt: new Date().toISOString(),
+    source: STATUS_URL,
+  };
 }

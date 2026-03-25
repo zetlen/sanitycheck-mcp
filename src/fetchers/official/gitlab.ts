@@ -25,7 +25,7 @@ export async function fetchGitLabStatus(): Promise<ServiceStatus> {
     });
     if (!response.ok) return makeUnknown(`HTTP ${response.status}`);
 
-    const data = await response.json() as any;
+    const data = (await response.json()) as any;
     log.debug("fetched", { elapsed: Date.now() - start });
 
     const overall = data?.result?.status_overall;
@@ -60,5 +60,11 @@ export async function fetchGitLabStatus(): Promise<ServiceStatus> {
 }
 
 function makeUnknown(reason: string): ServiceStatus {
-  return { name: "GitLab", status: "unknown", summary: `Status page unreachable (${reason})`, updatedAt: new Date().toISOString(), source: STATUS_URL };
+  return {
+    name: "GitLab",
+    status: "unknown",
+    summary: `Status page unreachable (${reason})`,
+    updatedAt: new Date().toISOString(),
+    source: STATUS_URL,
+  };
 }
