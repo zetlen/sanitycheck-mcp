@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1](https://github.com/zetlen/sanitycheck-mcp/compare/v0.2.0...v0.2.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* deduplicate GCP/Google AI entry and reduce vibes noise ([ce36b44](https://github.com/zetlen/sanitycheck-mcp/commit/ce36b446d69f011758acfdc7a4ee59c662d55112))
+* point Google AI to its dedicated status page ([6261e68](https://github.com/zetlen/sanitycheck-mcp/commit/6261e686ebf8789e73986a5fbb9590f0ca8ac6af))
+* prioritize and cap incidents in whats_going_on_with output ([7342b7f](https://github.com/zetlen/sanitycheck-mcp/commit/7342b7f0b2ba2cb0ceed67756768139e35460103))
+
 ## [0.2.0](https://github.com/zetlen/sanitycheck-mcp/compare/v0.1.3...v0.2.0) (2026-03-25)
 
 
