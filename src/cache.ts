@@ -72,3 +72,11 @@ export function createDefaultCache(): FileCache {
   const base = xdg || join(process.env.HOME || "/tmp", ".cache");
   return new FileCache(join(base, "sanitycheck-mcp"));
 }
+
+export function createConfiguredCache(): FileCache | undefined {
+  const disableCache = process.env.SANITYCHECK_DISABLE_CACHE;
+  if (disableCache === "1" || disableCache?.toLowerCase() === "true") {
+    return undefined;
+  }
+  return createDefaultCache();
+}
