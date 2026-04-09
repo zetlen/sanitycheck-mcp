@@ -88,7 +88,13 @@ export async function fetchStatuspageSummary(
     const [statusResult, componentsResult, incidentsResult] = await Promise.allSettled([
       fetchStatuspageEndpoint(baseUrl, "status.json", serviceName, statuspageId, commonHeaders),
       fetchStatuspageEndpoint(baseUrl, "components.json", serviceName, statuspageId, commonHeaders),
-      fetchStatuspageEndpoint(baseUrl, "incidents/unresolved.json", serviceName, statuspageId, commonHeaders),
+      fetchStatuspageEndpoint(
+        baseUrl,
+        "incidents/unresolved.json",
+        serviceName,
+        statuspageId,
+        commonHeaders,
+      ),
     ]);
 
     if (statusResult.status === "rejected") {
@@ -117,8 +123,10 @@ export async function fetchStatuspageSummary(
     const data = {
       page,
       status: statusResult.value?.status,
-      components: componentsResult.status === "fulfilled" ? (componentsResult.value?.components ?? []) : [],
-      incidents: incidentsResult.status === "fulfilled" ? (incidentsResult.value?.incidents ?? []) : [],
+      components:
+        componentsResult.status === "fulfilled" ? (componentsResult.value?.components ?? []) : [],
+      incidents:
+        incidentsResult.status === "fulfilled" ? (incidentsResult.value?.incidents ?? []) : [],
     };
 
     log.debug("fetched", {
@@ -132,7 +140,12 @@ export async function fetchStatuspageSummary(
     const detail = parseStatuspageDetail(data, serviceName, baseUrl);
     return { status, detail };
   } catch (err) {
-    log.error("fetch-error", { serviceName, baseUrl, error: String(err), elapsed: Date.now() - start });
+    log.error("fetch-error", {
+      serviceName,
+      baseUrl,
+      error: String(err),
+      elapsed: Date.now() - start,
+    });
     const unknown = makeUnknown(serviceName, baseUrl, String(err));
     return {
       status: unknown,
