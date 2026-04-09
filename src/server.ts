@@ -4,7 +4,7 @@ import { z } from "zod";
 import { handleIsTheInternetOnFire } from "./tools/is-the-internet-on-fire.js";
 import { handleWhatsGoingOnWith } from "./tools/whats-going-on-with.js";
 import { handleHowAmIFeeling } from "./tools/how-am-i-feeling.js";
-import { createDefaultCache } from "./cache.js";
+import { createConfiguredCache } from "./cache.js";
 import { createLogger } from "./logger.js";
 
 const log = createLogger("server");
@@ -15,7 +15,7 @@ export function createServer() {
     version: "0.1.0",
   });
 
-  const cache = createDefaultCache();
+  const cache = createConfiguredCache();
 
   // Lazily read clientInfo from the McpServer's internal state.
   // clientInfo is set during the initialize handshake (after connect but before

@@ -75,6 +75,7 @@ claude mcp add sanitycheck -- npx -y sanitycheck-mcp
 |----------|-------------|
 | `SANITYCHECK_DEBUG=1` | Enable debug logging to stderr |
 | `SANITYCHECK_CHROME_PATH` | Path to Chrome binary for headless browser features |
+| `SANITYCHECK_DISABLE_CACHE=1` | Disable the on-disk cache for official status and aggregator fetches |
 
 ## Development
 

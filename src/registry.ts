@@ -107,7 +107,7 @@ export const SERVICES: ServiceEntry[] = [
     slug: "anthropic",
     category: "ai",
     statusUrl: "https://status.anthropic.com",
-    statuspageId: "2fxwrmymcl5j",
+    statuspageId: "tymt9n04zgry",
     downdetectorSlug: "anthropic",
   },
   {

@@ -77,7 +77,6 @@ export async function fetchStatuspageSummary(
   serviceName: string,
   statuspageId?: string,
 ): Promise<{ status: ServiceStatus; detail: ServiceDetail }> {
-  const url = `${baseUrl}/api/v2/summary.json`;
   const start = Date.now();
 
   const commonHeaders = {
@@ -86,69 +85,104 @@ export async function fetchStatuspageSummary(
   };
 
   try {
-    const response = await fetch(url, {
-      headers: commonHeaders,
-      signal: AbortSignal.timeout(10_000),
-    });
+    const [statusResult, componentsResult, incidentsResult] = await Promise.allSettled([
+      fetchStatuspageEndpoint(baseUrl, "status.json", serviceName, statuspageId, commonHeaders),
+      fetchStatuspageEndpoint(baseUrl, "components.json", serviceName, statuspageId, commonHeaders),
+      fetchStatuspageEndpoint(baseUrl, "incidents/unresolved.json", serviceName, statuspageId, commonHeaders),
+    ]);
 
-    if (!response.ok) {
-      log.warn("http-error", { serviceName, url, status: response.status });
-
-      // If the vanity URL returned 403/404 and we have a statuspageId, try the canonical URL
-      if ((response.status === 403 || response.status === 404) && statuspageId) {
-        const fallbackUrl = `https://${statuspageId}.statuspage.io/api/v2/summary.json`;
-        log.debug("trying-fallback", { serviceName, fallbackUrl });
-        try {
-          const fallbackResponse = await fetch(fallbackUrl, {
-            headers: commonHeaders,
-            signal: AbortSignal.timeout(10_000),
-          });
-          if (fallbackResponse.ok) {
-            const data = await fallbackResponse.json();
-            log.debug("fetched-fallback", {
-              serviceName,
-              fallbackUrl,
-              elapsed: Date.now() - start,
-            });
-            const status = parseStatuspageStatus(data, serviceName, baseUrl);
-            const detail = parseStatuspageDetail(data, serviceName, baseUrl);
-            return { status, detail };
-          }
-          log.warn("fallback-http-error", {
-            serviceName,
-            fallbackUrl,
-            status: fallbackResponse.status,
-          });
-        } catch (fallbackErr) {
-          log.error("fallback-fetch-error", {
-            serviceName,
-            fallbackUrl,
-            error: String(fallbackErr),
-          });
-        }
-      }
-
-      const unknown = makeUnknown(serviceName, baseUrl, `HTTP ${response.status}`);
-      return {
-        status: unknown,
-        detail: { ...unknown, components: [], incidents: [], thirdPartyReports: {} },
-      };
+    if (statusResult.status === "rejected") {
+      throw statusResult.reason;
     }
 
-    const data = await response.json();
-    log.debug("fetched", { serviceName, url, elapsed: Date.now() - start });
+    if (componentsResult.status === "rejected") {
+      log.warn("components-fetch-error", {
+        serviceName,
+        error: String(componentsResult.reason),
+      });
+    }
+
+    if (incidentsResult.status === "rejected") {
+      log.warn("incidents-fetch-error", {
+        serviceName,
+        error: String(incidentsResult.reason),
+      });
+    }
+
+    const page =
+      statusResult.value?.page ??
+      (componentsResult.status === "fulfilled" ? componentsResult.value?.page : undefined) ??
+      (incidentsResult.status === "fulfilled" ? incidentsResult.value?.page : undefined);
+
+    const data = {
+      page,
+      status: statusResult.value?.status,
+      components: componentsResult.status === "fulfilled" ? (componentsResult.value?.components ?? []) : [],
+      incidents: incidentsResult.status === "fulfilled" ? (incidentsResult.value?.incidents ?? []) : [],
+    };
+
+    log.debug("fetched", {
+      serviceName,
+      elapsed: Date.now() - start,
+      components: data.components.length,
+      incidents: data.incidents.length,
+    });
 
     const status = parseStatuspageStatus(data, serviceName, baseUrl);
     const detail = parseStatuspageDetail(data, serviceName, baseUrl);
     return { status, detail };
   } catch (err) {
-    log.error("fetch-error", { serviceName, url, error: String(err), elapsed: Date.now() - start });
+    log.error("fetch-error", { serviceName, baseUrl, error: String(err), elapsed: Date.now() - start });
     const unknown = makeUnknown(serviceName, baseUrl, String(err));
     return {
       status: unknown,
       detail: { ...unknown, components: [], incidents: [], thirdPartyReports: {} },
     };
   }
+}
+
+async function fetchStatuspageEndpoint(
+  baseUrl: string,
+  endpoint: string,
+  serviceName: string,
+  statuspageId: string | undefined,
+  headers: Record<string, string>,
+): Promise<any> {
+  const urls = [`${baseUrl}/api/v2/${endpoint}`];
+  if (statuspageId) {
+    urls.push(`https://${statuspageId}.statuspage.io/api/v2/${endpoint}`);
+  }
+
+  let lastError = "Unknown fetch error";
+
+  for (let index = 0; index < urls.length; index += 1) {
+    const url = urls[index];
+    try {
+      const response = await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(10_000),
+      });
+
+      if (response.ok) {
+        if (index > 0) {
+          log.debug("fetched-fallback", { serviceName, endpoint, url });
+        }
+        return await response.json();
+      }
+
+      log.warn("http-error", { serviceName, endpoint, url, status: response.status });
+      lastError = `HTTP ${response.status}`;
+
+      if (response.status !== 403 && response.status !== 404) {
+        break;
+      }
+    } catch (err) {
+      lastError = String(err);
+      log.error("endpoint-fetch-error", { serviceName, endpoint, url, error: lastError });
+    }
+  }
+
+  throw new Error(`${endpoint}: ${lastError}`);
 }
 
 function makeUnknown(name: string, source: string, reason: string): ServiceStatus {
