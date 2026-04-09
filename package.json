@@ -1,6 +1,6 @@
 {
   "name": "sanitycheck-mcp",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "MCP server that gives AI coding agents awareness of internet and service health",
   "keywords": [],
   "license": "ISC",
