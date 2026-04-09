@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/zetlen/sanitycheck-mcp/compare/v0.2.1...v0.2.2) (2026-04-09)
+
+
+### Bug Fixes
+
+* format statuspage fetcher to pass oxfmt check ([b1299a5](https://github.com/zetlen/sanitycheck-mcp/commit/b1299a50001c2225115292fd4af37e3bd365df7b))
+* format statuspage fetcher to pass oxfmt check ([9b9ad39](https://github.com/zetlen/sanitycheck-mcp/commit/9b9ad39526ff5dbdf12c88c21559d71a2f070181))
+
 ## [0.2.1](https://github.com/zetlen/sanitycheck-mcp/compare/v0.2.0...v0.2.1) (2026-03-25)
 
 
